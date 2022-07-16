@@ -11,7 +11,7 @@ const Layout = ({ children }) => {
       <NavComponent />
       <Flex>
         {authenticated && (
-          <Box w="20%">
+          <Box w="20%" position="sticky">
             <SidebarWrapper />
           </Box>
         )}

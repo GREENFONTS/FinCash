@@ -1,8 +1,7 @@
-import { Spinner } from "@chakra-ui/react";
+import { Container, Spinner, Center, Flex } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import auth from "../redux/features/Users/auth";
 
 const Loading = () => {
   const { isLoading, authenticated } = useSelector((state) => state.auth);
@@ -10,24 +9,24 @@ const Loading = () => {
 
   useEffect(() => {
     let token = localStorage.getItem("token");
-    console.log(authenticated, token)
-    if (token == null){
+    if (token == null) {
       if (!authenticated) {
         nav("/SignIn");
       }
     }
-     
-    else{
-      if (!authenticated) {
-        nav("/SignIn");
-      }
-    }
-  });
+  }, []);
 
   return (
-    <div>
-      Loading.. <Spinner />
-      </div>
+    <Flex justifyContent="center" position="fixed" bg="#000" opacity="0.1" left="0" top="70" w="100%" h="100vh" alignItems="center">
+      
+      <Spinner
+        thickness="6px"
+        speed="0.65s"
+        emptyColor="gray.200"
+        color="blue.800"
+        size="xl"
+      />
+    </Flex>
   );
 };
 

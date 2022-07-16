@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { UserRegister } from "../redux/features/Users/auth";
 import Alert from "../components/Alert";
-import {Box, Center, Image, Text, Icon, FormControl, Input, Button, VStack, useColorModeValue, FormLabel, FormHelperText} from "@chakra-ui/react";
+import {Box, Center, Image, Text, Icon, FormControl, Input, Button, VStack,  FormHelperText} from "@chakra-ui/react";
 import { FaUser } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const dispatch = useDispatch();
-  const {isLoading, error} = useSelector(state => state.auth)
+  const nav = useNavigate()
+  const { isLoading,error, token, user, authenticated, expiryDate} = useSelector(
+    (state) => state.auth
+  );
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,9 +50,17 @@ const Register = () => {
     e.preventDefault()
     console.log(formBody);
 
-    dispatch(UserRegister(formBody));
-    
+    dispatch(UserRegister(formBody));    
   };
+
+  useEffect(() => {
+    if(authenticated){
+      localStorage.setItem('token', token)
+      localStorage.setItem('tokenExpiryDate', expiryDate)
+      localStorage.setItem('user', JSON.stringify(user))
+      nav("/dashboard")
+    }
+  })
 
   return (
     <Box mt={{md: "5"}}>

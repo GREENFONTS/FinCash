@@ -9,6 +9,7 @@ const initialState = {
   isLoading: false,
   error: null,
   authenticated: false,
+  monoKey: null,
 };
 
 export const UserLogin = createAsyncThunk(
@@ -57,8 +58,29 @@ export const UserRegister = createAsyncThunk(
   },
 );
 
+export const AddServiceKeys = createAsyncThunk(
+  "user/AddServiceKeys",
+  async (Data) => {
+    console.log(Data.formBody);
+    const res = await fetch(`${url}/AddServiceKeys`, {
+      method: "POST",
+      headers: new Headers({
+        "content-type": "application/json",
+        Authorization: `Bearer ${Data.token}`,
+        Accept: "application/json",
+      }),
+      body: JSON.stringify(Data.formBody),
+    });
+    const result = await res.json();
+    if (res.status === 404) {
+      throw Error(result[404].errors[0].errorMessage);
+    }
+    return result;
+  },
+);
+
 const AuthSlice = createSlice({
-  name: "userLogin",
+  name: "user",
   initialState,
   reducers: {
     reset: () => initialState,
@@ -69,10 +91,11 @@ const AuthSlice = createSlice({
       state.isLoading = action.payload;
     },
     setState: (state, action) => {
-        state.token = action.payload.token
-        state.user = action.payload.user
-        state.expiryDate = action.payload.expiryDate
-    }
+      state.token = action.payload.token;
+      state.user = action.payload.user;
+      state.expiryDate = action.payload.expiryDate;
+      state.monoKey = action.payload.monoKey;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(UserLogin.pending, (state) => {
@@ -82,8 +105,9 @@ const AuthSlice = createSlice({
       state.error = null;
       state.isLoading = false;
       state.token = action.payload.token[0];
-      state.expiryDate = action.payload.token[1]
+      state.expiryDate = action.payload.token[1];
       state.user = action.payload.user;
+      state.monoKey = action.payload.monoKey;
     });
     builder.addCase(UserLogin.rejected, (state, action) => {
       state.isLoading = false;
@@ -97,7 +121,8 @@ const AuthSlice = createSlice({
     builder.addCase(UserRegister.fulfilled, (state, action) => {
       state.error = null;
       state.isLoading = false;
-      state.token = action.payload.token;
+      state.token = action.payload.token[0];
+      state.expiryDate = action.payload.token[1];
       state.user = action.payload.user;
     });
     builder.addCase(UserRegister.rejected, (state, action) => {
@@ -107,14 +132,30 @@ const AuthSlice = createSlice({
 
     //verifyToken
     builder.addCase(verifyToken.pending, (state) => {
-        state.isLoading = true;
-      });
-      builder.addCase(verifyToken.fulfilled, (state, action) => {
-        state.isLoading = false;
-      });
+      state.isLoading = true;
+    });
+    builder.addCase(verifyToken.fulfilled, (state, action) => {
+      state.isLoading = false;
+    });
+
+    //add service Keys
+    builder.addCase(AddServiceKeys.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(AddServiceKeys.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.monoKey = action.payload;
+    });
+    builder.addCase(AddServiceKeys.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.error.message;
+    });
   },
 });
 
-export const { reset, setLoading, setAuthenticated, setState} = AuthSlice.actions;
+export const { reset, setLoading, setAuthenticated, setState } =
+  AuthSlice.actions;
 
 export default AuthSlice.reducer;
+
+//live_pk_rsvVbMIGeGx2FsAVP0c2

@@ -52,10 +52,11 @@ const NavComponent = () => {
       bg={backgroundColor}
       justifyContent="space-between"
       boxShadow={`0px 0px 5px ${shadow}`}
+     position="sticky"
     >
       <Box>
         <Link display="flex" justifyContent="center" to="/" as={NavLink}>
-          {/* <svg
+          <svg
             width="40"
             height="36"
             viewBox="0 0 40 36"
@@ -72,7 +73,7 @@ const NavComponent = () => {
               d="M18.3387 27.7826H14.512V11.5517H8.21741V8.21738H14.5556V8.21737H27.7826V11.5517L24.6056 11.5517H18.3823V16.5946H26.202V19.6809H18.3823V27.7826L18.3387 27.7826Z"
               fill="white"
             />
-          </svg> */}
+          </svg>
           <Text
             fontSize={{ base: "20px", md: "25px", lg: "25px" }}
             fontWeight="600"
@@ -129,7 +130,7 @@ const NavComponent = () => {
                 />
               </HStack>
             ) : (
-              <HStack spacing="24px">
+              <HStack spacing="20px">
                 <Menu>
                   <MenuButton
                     as={Button}

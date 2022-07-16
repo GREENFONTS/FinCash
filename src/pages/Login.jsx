@@ -10,18 +10,18 @@ const LoginPage = () => {
   const nav = useNavigate();
   const dispatch = useDispatch();
   const textColor = useColorModeValue("black", "white");
-  const { isLoading,error, token, user, authenticated, expiryDate} = useSelector(
+  const { isLoading,error, token, user, authenticated, expiryDate, monoKey} = useSelector(
     (state) => state.auth
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    console.log()
     if(authenticated){
       localStorage.setItem('token', token)
       localStorage.setItem('tokenExpiryDate', expiryDate)
       localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem('monoKey', monoKey)
       nav("/dashboard")
     }
   })
