@@ -52,7 +52,10 @@ const NavComponent = () => {
       bg={backgroundColor}
       justifyContent="space-between"
       boxShadow={`0px 0px 5px ${shadow}`}
-     position="sticky"
+      position="fixed"
+      overflow="hidden"
+      top="0"
+      w="100%"
     >
       <Box>
         <Link display="flex" justifyContent="center" to="/" as={NavLink}>
@@ -146,7 +149,11 @@ const NavComponent = () => {
                     />
                   </MenuButton>
                   <MenuList>
-                    <MenuItem minH="48px" bg="inherit" onClick={() => nav("/Profile")}>
+                    <MenuItem
+                      minH="48px"
+                      bg="inherit"
+                      onClick={() => nav("/Profile")}
+                    >
                       <HStack justifyContent="space-between">
                         <Icon as={ImProfile} m="2" fontSize="20px" />
                         <Text m="2" textDecoration="none">
@@ -155,7 +162,7 @@ const NavComponent = () => {
                       </HStack>
                     </MenuItem>
                     <MenuItem minH="40px" onClick={() => SignOutHandler()}>
-                    <HStack justifyContent="space-between">
+                      <HStack justifyContent="space-between">
                         <Icon as={FaSignOutAlt} m="2" fontSize="20px" />
                         <Text m="2" textDecoration="none">
                           Sign Out

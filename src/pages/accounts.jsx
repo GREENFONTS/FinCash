@@ -142,7 +142,6 @@ const Accounts = () => {
       const DebitTrans = Transactions.filter(
         (transaction) => transaction.type == "debit",
       );
-      console.log(DebitTrans)
       setDebitTrans(DebitTrans);
     }
   }, [Transactions]);
@@ -154,7 +153,7 @@ const Accounts = () => {
         <Loading />
       ) : (
         <>
-          <Box bg="gray.200" h="100vh" p="5" mb="5">
+          <Box bg="gray.200" p="5" mb="5">
             <Box mt="5">
               <Text fontFamily="cursive">
                 Hello {user ? user.userName : ""}, Welcome back 👋🏻

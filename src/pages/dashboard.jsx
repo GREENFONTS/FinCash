@@ -40,7 +40,7 @@ const Dashboard = () => {
   const { user, isLoading, token, monoKey, error } = useSelector(
     (state) => state.auth,
   );
-  const { accounts } = useSelector((state) => state.accounts);
+  const { accounts, Transactions } = useSelector((state) => state.accounts);
   const [modalState, setModalState] = useState(false);
   const [userId, setUserId] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -52,7 +52,7 @@ const Dashboard = () => {
     let expiryDate = localStorage.getItem("tokenExpiryDate");
     let monoKey = localStorage.getItem("monoKey");
 
-    AccessRoute(token, user, expiryDate, monoKey, dispatch);
+    AccessRoute(token, user, expiryDate, monoKey, Transactions, dispatch);
     const { id } = JSON.parse(user);
     const Data = {
       token,
@@ -84,7 +84,7 @@ const Dashboard = () => {
         <Loading />
       ) : (
         <>
-          <Box bg="gray.200" h="100vh" p="5" mb="5">
+          <Box bg="gray.200" p="5" mb="5">
             <Box mt="5">
               <Text fontFamily="cursive">
                 Hello {user ? user.userName : ""}, Welcome back 👋🏻
