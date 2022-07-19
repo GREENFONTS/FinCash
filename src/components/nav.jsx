@@ -15,16 +15,14 @@ import {
   useColorModeValue,
   useColorMode,
   useMediaQuery,
-  Drawer,
 } from "@chakra-ui/react";
 import { BiMoon } from "react-icons/bi";
 import { ImSun } from "react-icons/im";
-import { GiHamburgerMenu, GiRamProfile } from "react-icons/gi";
-import { FaUser, FaChevronDown, FaEdit, FaSignOutAlt } from "react-icons/fa";
+import { GiHamburgerMenu } from "react-icons/gi";
+import { FaUser, FaChevronDown, FaSignOutAlt } from "react-icons/fa";
 import { ImProfile } from "react-icons/im";
 import { setAuthenticated } from "../redux/features/Users/auth";
 import { setDrawerState } from "../redux/features/Utils/utils";
-import SidebarWrapper from "./SideBar";
 import DrawerComponent from "./Drawer";
 
 const NavComponent = () => {
@@ -34,7 +32,6 @@ const NavComponent = () => {
   const [isLesserThan900] = useMediaQuery("(max-width: 900px)");
   const [isLargerThan900] = useMediaQuery("(min-width: 900px)");
   const iconColor = useColorModeValue("themeLight.icon", "themeLight.icon");
-  const backgroundColor = useColorModeValue("themeLight.icon", "white.100");
   const shadow = useColorModeValue("#333", "#000");
   const icon = useColorModeValue(BiMoon, ImSun);
   const { authenticated } = useSelector((state) => state.auth);
@@ -49,11 +46,11 @@ const NavComponent = () => {
     <Flex
       p={{ base: "3", md: "5" }}
       h={{ base: "55px", md: "70px" }}
-      bg={backgroundColor}
+      bg="#fff"
       justifyContent="space-between"
       boxShadow={`0px 0px 5px ${shadow}`}
-      position="fixed"
-      overflow="hidden"
+      position="sticky"
+      zIndex={999}
       top="0"
       w="100%"
     >

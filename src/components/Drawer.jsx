@@ -19,7 +19,7 @@ import { setDrawerState } from "../redux/features/Utils/utils";
 
 const DrawerComponent = () => {
   const { drawerState } = useSelector((state) => state.utils);
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const { onClose} = useDisclosure();
   const dispatch = useDispatch();
   return (
     <Drawer

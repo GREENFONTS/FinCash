@@ -1,35 +1,21 @@
 import React from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Drawer,
-  Flex,
-  Button,
   Box,
-  Link,
-  DrawerOverlay,
-  DrawerBody,
   Icon,
   Text,
-  DrawerContent,
   HStack,
-  LinkBox,
-  useDisclosure,
-  DrawerHeader,
   useColorModeValue,
   Container,
   Divider,
   VStack,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { setDrawerState } from "../redux/features/Utils/utils";
-import { FaMoneyBillAlt } from "react-icons/fa";
 import { MdPayments } from "react-icons/md";
 
-const SidebarWrapper = () => {
-  const dispatch = useDispatch();
+const LeftSidebarWrapper = () => {
   const nav = useNavigate();
   const backgroundColor = useColorModeValue("purple.800", "purple.900");
-  const shadow = useColorModeValue("#333", "#000");
   const { user } = useSelector((state) => state.auth);
   const { pathname } = useLocation();
 
@@ -55,11 +41,11 @@ const SidebarWrapper = () => {
           borderLeft={pathname === "/dashboard" ? "2px solid white" : "none"}
           _hover={{cursor: "pointer"}}
         >
-          <Box m="2" >
+          <Box m="3" >
             <svg
-              width="18"
-              height="20"
-              viewBox="0 0 18 20"
+              width="23"
+              height="23"
+              viewBox="0 0 23 23"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -69,7 +55,7 @@ const SidebarWrapper = () => {
             </svg>
           </Box>
 
-          <Text m="2" textDecoration="none">
+          <Text m="3" fontSize="23px" textDecoration="none">
             Overview
           </Text>
         </HStack>
@@ -82,12 +68,12 @@ const SidebarWrapper = () => {
           }
           _hover={{cursor: "pointer"}}
         >
-          <Box m="2" >
+          <Box m="3" >
             
             <svg
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
+              width="23"
+              height="23"
+              viewBox="0 0 23 23"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -98,22 +84,8 @@ const SidebarWrapper = () => {
             </svg>
           </Box>
 
-          <Text m="2" textDecoration="none">
+          <Text m="3" fontSize="23px" textDecoration="none">
             Accounts
-          </Text>
-        </HStack>
-
-        <HStack
-          onClick={() => nav("/dashboard/transactions")}
-          textColor="white"
-          borderLeft={
-            pathname === "/dashboard/transactions" ? "2px solid white" : "none"
-          }
-          _hover={{cursor: "pointer"}}
-        >
-          <Icon as={FaMoneyBillAlt} m="2" fontSize="20px" />
-          <Text m="2" textDecoration="none">
-            Transactions
           </Text>
         </HStack>
 
@@ -125,11 +97,11 @@ const SidebarWrapper = () => {
           }
           _hover={{cursor: "pointer"}}
         >
-          <Box m="2">
+          <Box m="3">
             <svg
-              width="18"
-              height="19"
-              viewBox="0 0 18 19"
+               width="23"
+               height="23"
+               viewBox="0 0 23 23"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -143,7 +115,7 @@ const SidebarWrapper = () => {
             </svg>
           </Box>
 
-          <Text m="2" textDecoration="none">
+          <Text m="3" fontSize="23px" textDecoration="none">
             Statistics
           </Text>
         </HStack>
@@ -156,9 +128,9 @@ const SidebarWrapper = () => {
             pathname === "/dashboard/billPayments" ? "2px solid white" : "none"
           }
         >
-          <Icon as={MdPayments} m="2" fontSize="20px" />
+          <Icon as={MdPayments} m="3" fontSize="23px" />
 
-          <Text m="2" textDecoration="none">
+          <Text m="3" fontSize="23px" textDecoration="none">
             Bill Payments
           </Text>
         </HStack>
@@ -167,4 +139,4 @@ const SidebarWrapper = () => {
   );
 };
 
-export default SidebarWrapper;
+export default LeftSidebarWrapper;

@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
-import App from "./App";
 import NavComponent from "./components/nav";
-import SidebarWrapper from "./components/SideBar";
+import LeftSidebarWrapper from "./components/LeftSideBar";
 import { Flex, Box } from "@chakra-ui/react";
+import RightSidebarWrapper from "./components/RigthSideBar";
 
 const Layout = ({ children }) => {
   const { authenticated } = useSelector((state) => state.auth);
@@ -10,13 +10,30 @@ const Layout = ({ children }) => {
     <>
       <NavComponent />
       <Flex>
-        {authenticated && (
-          <Box w="20%" h="100%" mt="70px" position="fixed" z-index="1" overflowX="hidden">
-            <SidebarWrapper />
+        {authenticated ?
+          <>
+          <Box w="20%" h="100%" position="fixed" z-index="1" overflowX="hidden">
+            <LeftSidebarWrapper />
           </Box>
-        )}
+          <Box
+          w={"65%"}
+          ml={ "20%"}
+          mr={"17%"}
+        >
+          {children}
+        </Box>
+        <Box w="17%" h="100%" position="fixed" right="0" z-index="1" overflowX="hidden">
+            <RightSidebarWrapper />
+          </Box></>
+          
+        : <Box
+        w={"100%"}
+        ml={"0%"}
+      >
+        {children}
+      </Box>}
 
-        <Box w={authenticated ? "80%" : "100%"} mt="70px" ml="20%">{children}</Box>
+       
       </Flex>
     </>
   );

@@ -9,7 +9,6 @@ import { FaUser } from "react-icons/fa";
 const LoginPage = () => {
   const nav = useNavigate();
   const dispatch = useDispatch();
-  const textColor = useColorModeValue("black", "white");
   const { isLoading,error, token, user, authenticated, expiryDate, monoKey} = useSelector(
     (state) => state.auth
   );

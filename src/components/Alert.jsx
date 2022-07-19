@@ -13,7 +13,7 @@ import { reset } from "../redux/features/Users/auth";
 const AlertComponent = () => {
   const dispatch = useDispatch();
   const {error} = useSelector((state) => state.auth)
-  const { isOpen, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const { onClose} = useDisclosure({ defaultIsOpen: true });
 
   return (
     <>

@@ -23,36 +23,48 @@ import {
   Image,
   Link,
   Button,
-  useStatStyles,
-  HStack,
 } from "@chakra-ui/react";
 import Loading from "../components/Loader";
 import { AccessRoute } from "../Utils/RouteAuth";
-import { GetAccounts } from "../redux/features/Users/accounts";
+import {
+  GetAccounts,
+  GetAllTransactions,
+} from "../redux/features/Users/accounts";
 import { AddServiceKeys } from "../redux/features/Users/auth";
 import DashboardAlert from "../components/DashboardAlert";
 import { useNavigate } from "react-router-dom";
+import TableComponent from "../components/TableComponent";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const nav = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { user, isLoading, token, monoKey, error } = useSelector(
+  const {  onClose } = useDisclosure();
+  const { user, isLoading, token, monoKey} = useSelector(
     (state) => state.auth,
   );
-  const { accounts, Transactions } = useSelector((state) => state.accounts);
+  const {
+    accounts,
+    Transactions,
+    AllTransactions,
+    RecentTransactions,
+  } = useSelector((state) => state.accounts);
   const [modalState, setModalState] = useState(false);
-  const [userId, setUserId] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [privateKey, setPrivateKey] = useState("");
+  const [creditTrans, setCreditTrans] = useState([]);
+  const [debitTrans, setDebitTrans] = useState([]);
+  const [transCount, setTransCount] = useState(0);
 
   useEffect(() => {
     let token = localStorage.getItem("token");
     let user = localStorage.getItem("user");
     let expiryDate = localStorage.getItem("tokenExpiryDate");
     let monoKey = localStorage.getItem("monoKey");
+    let transactions = localStorage.getItem("transactions");
+    let allTransactions = localStorage.getItem("AllTransactions");
+    let recentTransactions = localStorage.getItem("RecentTransactions");
+    
 
-    AccessRoute(token, user, expiryDate, monoKey, Transactions, dispatch);
+    AccessRoute(token, user, expiryDate, monoKey, transactions, allTransactions, recentTransactions, dispatch);
     const { id } = JSON.parse(user);
     const Data = {
       token,
@@ -78,9 +90,65 @@ const Dashboard = () => {
     }
   };
 
+
+  useEffect(() => {
+    let start = 0;
+   
+    if (AllTransactions != null) {
+      let end = AllTransactions.length
+      localStorage.setItem("AllTransactions", JSON.stringify(AllTransactions));
+      let timer = setInterval(() => {
+        start += 1;
+
+        if (start === end) {
+          clearInterval(timer);
+        } else setTransCount(start);
+      }, 1);
+    }
+  }, [AllTransactions]);
+
+  useEffect(() => {
+    if (RecentTransactions) {
+      localStorage.setItem(
+        "RecentTransactions",
+        JSON.stringify(RecentTransactions),
+      );
+
+      const CreditTrans = RecentTransactions.filter(
+        (transaction) => transaction.type == "credit",
+      );
+      setCreditTrans(CreditTrans.slice(0, 10));
+      const DebitTrans = RecentTransactions.filter(
+        (transaction) => transaction.type == "debit",
+      );
+      setDebitTrans(DebitTrans.slice(0, 10));
+    }
+  }, [RecentTransactions]);
+
+  useEffect(() => {
+    let accountIds = [];
+    if (accounts != null) {
+      accounts.forEach((account) => {
+        accountIds.push(account.branchId);
+      });
+
+      if (AllTransactions == null) {
+        const Data = {
+          userId: user.id,
+          token,
+        };
+
+        if(RecentTransactions == null && AllTransactions == null){
+          dispatch(GetAllTransactions(Data));
+        }
+        
+      }
+    }
+  }, [accounts]);
+
   return (
     <>
-      {!user ? (
+      {!user && !RecentTransactions && !Transactions ? (
         <Loading />
       ) : (
         <>
@@ -212,12 +280,12 @@ const Dashboard = () => {
                     <>
                       <Flex justifyContent="space-between">
                         <Box m="5" align="center">
-                        <Flex
+                          <Flex
                             textAlign="center"
                             color="purple.700"
-                            fontSize="30px"                 
+                            fontSize="30px"
                             boxShadow="base"
-                            borderRadius="50%"                            
+                            borderRadius="50%"
                             w="200px"
                             bg="white"
                             lineHeight="200px"
@@ -231,25 +299,25 @@ const Dashboard = () => {
                           <Flex
                             textAlign="center"
                             color="purple.700"
-                            fontSize="30px"                 
+                            fontSize="30px"
                             boxShadow="base"
-                            borderRadius="50%"                            
+                            borderRadius="50%"
                             w="200px"
                             bg="white"
                             lineHeight="200px"
                           >
-                            <Text m="auto">N353456665</Text>
+                            <Text m="auto">{transCount}</Text>
                           </Flex>
                           <Text mt="3">Transactions</Text>
                         </Box>
 
                         <Box m="5" align="center">
-                        <Flex
+                          <Flex
                             textAlign="center"
                             color="purple.700"
-                            fontSize="30px"                 
+                            fontSize="30px"
                             boxShadow="base"
-                            borderRadius="50%"                            
+                            borderRadius="50%"
                             w="200px"
                             bg="white"
                             lineHeight="200px"
@@ -309,33 +377,11 @@ const Dashboard = () => {
                   </TabList>
                   <TabPanels>
                     <TabPanel>
-                      <Box>
-                        <Flex
-                          justifyContent="space-between"
-                          p="5"
-                          fontSize="17px"
-                          fontWeight="600"
-                        >
-                          <Text>Description</Text>
-                          <Text>Amount(N)</Text>
-                          <Text>Date</Text>
-                        </Flex>
-                      </Box>
+                      <TableComponent transactions={creditTrans} />
                     </TabPanel>
 
                     <TabPanel>
-                      <Box>
-                        <Flex
-                          justifyContent="space-between"
-                          p="5"
-                          fontSize="17px"
-                          fontWeight="600"
-                        >
-                          <Text>Description</Text>
-                          <Text>Amount(N)</Text>
-                          <Text>Date</Text>
-                        </Flex>
-                      </Box>
+                      <TableComponent transactions={debitTrans} />
                     </TabPanel>
                   </TabPanels>
                 </Tabs>

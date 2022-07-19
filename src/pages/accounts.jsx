@@ -7,11 +7,14 @@ import {
   AddAccount,
   GetAccountId,
   GetAccountTransactions,
+  UpdateAccount,
+  UnlinkAccount,
 } from "../redux/features/Users/accounts";
 import { AccessRoute } from "../Utils/RouteAuth";
 import MonoConnect from "@mono.co/connect.js";
 
 import {
+  HStack,
   Modal,
   ModalHeader,
   ModalBody,
@@ -33,29 +36,36 @@ import {
   FormControl,
   Input,
   Image,
-  Link,
   Button,
   Textarea,
   Divider,
 } from "@chakra-ui/react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import DashboardAlert from "../components/DashboardAlert";
 import { useNavigate } from "react-router-dom";
+import TableComponent from "../components/TableComponent";
 
 const Accounts = () => {
   const dispatch = useDispatch();
   const nav = useNavigate();
   const { onClose } = useDisclosure();
-  const { user, token, monoKey } = useSelector((state) => state.auth);
-  const { accounts, isLoading, Transactions } = useSelector(
+  const { user, token, monoKey, authenticated } = useSelector(
+    (state) => state.auth,
+  );
+  const { accounts, isAcctLoading, Transactions } = useSelector(
     (state) => state.accounts,
   );
   const [modalState, setModalState] = useState(false);
   const [BranchName, setBranchName] = useState("");
   const [BranchAddress, setBranchAddress] = useState("");
   const [BranchDescription, setBranchDescription] = useState("");
-  const [BranchId, setBranchId] = useState("");
+  const [BranchId, setBranchId] = useState();
   const [creditTrans, setCreditTrans] = useState([]);
   const [debitTrans, setDebitTrans] = useState([]);
+  const [code, setCode] = useState("");
+  const [accountId, setAccountId] = useState("");
+  const [updateModal, setUpdateModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
 
   useEffect(() => {
     let token = localStorage.getItem("token");
@@ -63,11 +73,19 @@ const Accounts = () => {
     let expiryDate = localStorage.getItem("tokenExpiryDate");
     let monoKey = localStorage.getItem("monoKey");
     let transactions = localStorage.getItem("transactions");
-    if (transactions !== undefined) {
-      transactions = JSON.parse(transactions);
-    }
+    let allTransactions = localStorage.getItem("AllTransactions");
+    let recentTransactions = localStorage.getItem("RecentTransactions");
 
-    AccessRoute(token, user, expiryDate, monoKey, transactions, dispatch);
+    AccessRoute(
+      token,
+      user,
+      expiryDate,
+      monoKey,
+      transactions,
+      allTransactions,
+      recentTransactions,
+      dispatch,
+    );
     const { id } = JSON.parse(user);
 
     const Data = {
@@ -83,13 +101,7 @@ const Accounts = () => {
         onClose: () => console.log("Widget closed"),
         onLoad: () => console.log("Widget loaded successfully"),
         onSuccess: ({ code }) => {
-          const Data = {
-            code,
-            BranchId: BranchId,
-            token,
-          };
-          console.log(Data);
-          dispatch(GetAccountId(Data));
+          setCode(code);
         },
 
         key: monoKey,
@@ -100,6 +112,17 @@ const Accounts = () => {
       return monoInstance;
     }
   }, [monoKey]);
+
+  useEffect(() => {
+    const Data = {
+      code,
+      BranchId,
+      token,
+    };
+    if (code != "") {
+      dispatch(GetAccountId(Data));
+    }
+  }, [code]);
 
   const submitBranchHandler = (e) => {
     e.preventDefault();
@@ -114,7 +137,7 @@ const Accounts = () => {
     };
 
     dispatch(AddAccount({ formBody, token }));
-    if (!isLoading) {
+    if (!isAcctLoading) {
       const Data = {
         token,
         id: user.id,
@@ -146,14 +169,56 @@ const Accounts = () => {
     }
   }, [Transactions]);
 
+  const onUpdateHandler = () => {
+    const formBody = {
+      BranchId: BranchId,
+      BranchName,
+      Address: BranchAddress,
+      Description: BranchDescription,
+      UserId: user.id,
+      AccountId: accountId,
+    };
+    const Data = {
+      formBody,
+      token,
+    };
+    dispatch(UpdateAccount(Data));
+
+    if (!isAcctLoading) {
+      const Data = {
+        token,
+        id: user.id,
+      };
+      dispatch(GetAccounts(Data));
+      setModalState(false);
+    }
+  };
+
+  const DeleteHandler = () => {
+    const Data = {
+      token,
+      BranchId,
+    };
+   
+    dispatch(UnlinkAccount(Data));
+    if(!isAcctLoading){
+      const Data = {
+        token,
+        id: user.id,
+      };
+      dispatch(GetAccounts(Data));
+      setDeleteModal(false) 
+       }
+  };
+
   return (
     <>
       {" "}
-      {!user ? (
+      {!user || !authenticated ? (
         <Loading />
       ) : (
         <>
-          <Box bg="gray.200" p="5" mb="5">
+          <Box bg="gray.100" p="5" mb="5">
             <Box mt="5">
               <Text fontFamily="cursive">
                 Hello {user ? user.userName : ""}, Welcome back 👋🏻
@@ -163,16 +228,15 @@ const Accounts = () => {
               </Text>
             </Box>
 
-            <Box mt="5" fontSize="20px" fontWeight="bold" w="80%">
+            <Box mt="5" fontSize="20px" fontWeight="bold" w="100%">
               <Text mb="5">
                 Linked Accounts - {accounts != null ? accounts.length : ""}
               </Text>
-
               {accounts != null ? (
                 <>
                   {accounts.length == 0 ? (
                     <>
-                      <Flex boxShadow={`0px 0px 3px #222`} p="5">
+                      <Flex boxShadow={`0px 0px 3px #222`} p="4">
                         <Box w="50%" h="40vh">
                           <Image
                             src="/images/NoData.svg"
@@ -198,89 +262,11 @@ const Accounts = () => {
                             </Button>
                           </Box>
                         </Flex>
-
-                        <Modal isOpen={modalState} onClose={onClose}>
-                          <ModalOverlay />
-                          <ModalContent>
-                            <ModalHeader textAlign="center">
-                              Create Account Branch
-                            </ModalHeader>
-                            <ModalCloseButton
-                              onClick={() => setModalState(false)}
-                            />
-                            <DashboardAlert />
-                            <ModalBody>
-                              <VStack mt="3" spacing="15px">
-                                <FormControl>
-                                  <Input
-                                    type="text"
-                                    size="lg"
-                                    className="form-control"
-                                    id="BranchName"
-                                    onChange={(e) =>
-                                      setBranchName(e.target.value)
-                                    }
-                                    value={BranchName}
-                                    placeholder="Enter Account / Branch Name"
-                                  />
-                                </FormControl>
-                                <FormControl>
-                                  <Input
-                                    type="text"
-                                    size="lg"
-                                    className="form-control"
-                                    id="BranchAddress"
-                                    onChange={(e) =>
-                                      setBranchAddress(e.target.value)
-                                    }
-                                    value={BranchAddress}
-                                    placeholder="Enter Account Bank / Branch Address"
-                                  />
-                                </FormControl>
-
-                                <FormControl>
-                                  <Textarea
-                                    type="text"
-                                    rows="5"
-                                    className="form-control"
-                                    id="BranchDescription"
-                                    onChange={(e) =>
-                                      setBranchDescription(e.target.value)
-                                    }
-                                    value={BranchDescription}
-                                    placeholder="Enter Account/Branch Description"
-                                  ></Textarea>
-                                </FormControl>
-                              </VStack>
-                            </ModalBody>
-
-                            <ModalFooter>
-                              <Button
-                                colorScheme="blue"
-                                mr={3}
-                                onClick={(e) => {
-                                  submitBranchHandler(e);
-                                }}
-                                isLoading={isLoading}
-                                loadingText="Submitting..."
-                              >
-                                Submit
-                              </Button>
-
-                              <Button
-                                variant="ghost"
-                                onClick={(e) => setModalState(false)}
-                              >
-                                Close
-                              </Button>
-                            </ModalFooter>
-                          </ModalContent>
-                        </Modal>
                       </Flex>
                     </>
                   ) : (
                     <>
-                      <Flex>
+                      <Flex justifyContent="space-between" flexWrap="wrap">
                         {accounts.map((account) => {
                           return (
                             <Box key={account.branchId}>
@@ -332,9 +318,6 @@ const Accounts = () => {
                                 </>
                               ) : (
                                 <Box
-                                  onClick={() =>
-                                    GetTransactionsHandler(account)
-                                  }
                                   bg="purple.800"
                                   borderRadius="7px"
                                   _hover={{
@@ -347,12 +330,62 @@ const Accounts = () => {
                                   h="8vh"
                                   p="3"
                                 >
-                                  <Text>{account.branchName}</Text>
+                                  <Flex justifyContent="space-between">
+                                    <Text
+                                      onClick={() =>
+                                        GetTransactionsHandler(account)
+                                      }
+                                    >
+                                      {account.branchName}
+                                    </Text>
+                                    <HStack ml="4" spacing="3px">
+                                      <Icon
+                                        as={FaEdit}
+                                        onClick={() => {
+                                          setBranchId(account.branchId);
+                                          setBranchAddress(account.address);
+                                          setBranchDescription(
+                                            account.description,
+                                          );
+                                          setBranchName(account.branchName);
+                                          setAccountId(account.accountId);
+                                          setUpdateModal(true);
+                                          setModalState(true);
+                                        }}
+                                      />
+
+                                      <Icon
+                                        as={FaTrash}
+                                        onClick={() => {
+                                          setBranchId(account.branchId);
+                                          setDeleteModal(true);
+                                        }}
+                                      />
+                                    </HStack>
+                                  </Flex>
                                 </Box>
                               )}
                             </Box>
                           );
                         })}
+                        <Box p="2">
+                          <Button
+                            bg="purple.800"
+                            onClick={() => setModalState(true)}
+                            borderRadius="9px"
+                            _hover={{
+                              transform: "scale(1.05)",
+                              cursor: "pointer",
+                            }}
+                            textColor="white"
+                            boxShadow="base"
+                            width="-moz-fit-content"
+                            h="8vh"
+                            p="3"
+                          >
+                            Add new Account
+                          </Button>
+                        </Box>
                       </Flex>
                     </>
                   )}
@@ -364,13 +397,13 @@ const Accounts = () => {
             </Box>
 
             <Box mt="5">
-              <Box align="center" mb="5" w="80%">
+              <Box align="center" mb="5" w="100%">
                 <Text fontSize="25px" fontWeight="bold">
                   Account Transactions
                 </Text>
               </Box>
 
-              <Box bg="white" borderRadius="8" p="5" w="80%">
+              <Box bg="white" borderRadius="8" boxShadow="base" p="5" w="100%">
                 <Tabs variant="unstyled">
                   <TabList>
                     <Tab
@@ -404,84 +437,110 @@ const Accounts = () => {
                   </TabList>
                   <TabPanels>
                     <TabPanel>
-                      <Box>
-                        <Flex
-                          justifyContent="space-between"
-                          p="5"
-                          fontSize="17px"
-                          fontWeight="600"
-                        >
-                          <Text w="40%">Description</Text>
-                          <Text>Amount(N)</Text>
-                          <Text>Date</Text>
-                        </Flex>
-                      </Box>
-
-                      {creditTrans.length > 0 ? (
-                        <>
-                          {creditTrans.map((trans) => {
-                            return (
-                              <Box key={trans.id}>
-                                <Flex
-                                justifyContent="space-around"
-                                  
-                                  fontSize="17px"
-                                  fontWeight="600"
-                                >
-                                  <Text flexWrap="wrap" w="40%" fontSize="10px">{trans.narration}</Text>
-                                  <Text>{trans.amount / 100}</Text>
-                                  <Text >{trans.date.split('T')[0]}</Text>
-                                </Flex>
-                              </Box>
-                            );
-                          })}
-                        </>
-                      ) : (
-                        <></>
-                      )}
+                      <TableComponent transactions={creditTrans} />
                     </TabPanel>
 
                     <TabPanel>
-                      <Box>
-                        <Flex
-                          justifyContent="space-between"
-                          p="5"
-                          fontSize="17px"
-                          fontWeight="600"
-                        >
-                          <Text>Description</Text>
-                          <Text>Amount(N)</Text>
-                          <Text>Date</Text>
-                        </Flex>
-                      </Box>
-
-                      {debitTrans.length > 0 ? (
-                        <>
-                          {debitTrans.map((trans) => {
-                            return (
-                              <Box key={trans.id}>
-                                <Flex
-                                justifyContent="space-around"
-                                  
-                                  fontSize="17px"
-                                  fontWeight="600"
-                                >
-                                  <Text flexWrap="wrap" w="40%" fontSize="10px">{trans.narration}</Text>
-                                  <Text>{trans.amount / 100}</Text>
-                                  <Text >{trans.date.split('T')[0]}</Text>
-                                </Flex>
-                              </Box>
-                            );
-                          })}
-                        </>
-                      ) : (
-                        <></>
-                      )}
+                      <TableComponent transactions={debitTrans} />
                     </TabPanel>
                   </TabPanels>
                 </Tabs>
               </Box>
             </Box>
+
+            <Modal isOpen={modalState} onClose={onClose}>
+              <ModalOverlay />
+              <ModalContent>
+                <ModalHeader textAlign="center">
+                  Create Account Branch
+                </ModalHeader>
+                <ModalCloseButton onClick={() => setModalState(false)} />
+                <DashboardAlert />
+                <ModalBody>
+                  <VStack mt="3" spacing="15px">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        size="lg"
+                        className="form-control"
+                        id="BranchName"
+                        onChange={(e) => setBranchName(e.target.value)}
+                        value={BranchName}
+                        placeholder="Enter Account / Branch Name"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        size="lg"
+                        className="form-control"
+                        id="BranchAddress"
+                        onChange={(e) => setBranchAddress(e.target.value)}
+                        value={BranchAddress}
+                        placeholder="Enter Account Bank / Branch Address"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <Textarea
+                        type="text"
+                        rows="5"
+                        className="form-control"
+                        id="BranchDescription"
+                        onChange={(e) => setBranchDescription(e.target.value)}
+                        value={BranchDescription}
+                        placeholder="Enter Account/Branch Description"
+                      ></Textarea>
+                    </FormControl>
+                  </VStack>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    colorScheme="blue"
+                    mr={3}
+                    onClick={(e) => {
+                      updateModal ? onUpdateHandler(e) : submitBranchHandler(e);
+                    }}
+                    isLoading={isAcctLoading}
+                    loadingText={updateModal ? "Updating..." : "Submitting..."}
+                  >
+                    Submit
+                  </Button>
+
+                  <Button variant="ghost" onClick={(e) => setModalState(false)}>
+                    Close
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
+
+            <Modal isOpen={deleteModal} onClose={onClose}>
+              <ModalContent>
+                <ModalHeader textAlign="center">Delete Acoount</ModalHeader>
+                <ModalBody>
+                  <Text>This action will Unlink this account</Text>
+                  <Text> Do you sure you want to unlink this account?</Text>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    colorScheme="red"
+                    mr={3}
+                    onClick={(e) => {
+                      DeleteHandler();
+                    }}
+                    isLoading={isAcctLoading}
+                    loadingText="Deleting..."
+                  >
+                    Delete
+                  </Button>
+
+                  <Button variant="ghost" onClick={(e) => setDeleteModal(false)}>
+                    Close
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
           </Box>
         </>
       )}

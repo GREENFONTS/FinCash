@@ -11,7 +11,7 @@ import {
   
   const DashboardAlert = () => {
     const {error} = useSelector((state) => state.auth)
-    const { isOpen, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+    const {onClose} = useDisclosure({ defaultIsOpen: true });
   
     return (
       <>

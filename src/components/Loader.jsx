@@ -1,19 +1,21 @@
-import { Container, Spinner, Center, Flex } from "@chakra-ui/react";
+import { Spinner, Flex } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const Loading = () => {
-  const { isLoading, authenticated } = useSelector((state) => state.auth);
+  const {  authenticated } = useSelector((state) => state.auth);
   const nav = useNavigate();
 
   useEffect(() => {
     let token = localStorage.getItem("token");
-    if (token == null) {
+    if(token == null){
       if (!authenticated) {
         nav("/SignIn");
-      }
+      
     }
+    }
+      
   }, []);
 
   return (
