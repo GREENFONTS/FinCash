@@ -10,7 +10,7 @@ import {
   Divider,
   VStack,
 } from "@chakra-ui/react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { MdPayments } from "react-icons/md";
 
 const LeftSidebarWrapper = () => {

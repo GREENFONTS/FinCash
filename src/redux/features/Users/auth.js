@@ -34,8 +34,7 @@ export const verifyToken = createAsyncThunk(
   async (token) => {
     try {
       const res = await fetch(`${url}/verifyToken?token=${token}`);
-      const result = await res.json();
-      console.log(result)
+      const result = await res.json()
       dispatch(setAuthenticated(result));
       return result;
     } catch (err) {}

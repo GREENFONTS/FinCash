@@ -9,6 +9,9 @@ import {
   GetAccountTransactions,
   UpdateAccount,
   UnlinkAccount,
+  setTypeTransactions,
+  setCurrentAccount,
+  GetAccountInfo,
 } from "../redux/features/Users/accounts";
 import { AccessRoute } from "../Utils/RouteAuth";
 import MonoConnect from "@mono.co/connect.js";
@@ -52,20 +55,26 @@ const Accounts = () => {
   const { user, token, monoKey, authenticated } = useSelector(
     (state) => state.auth,
   );
-  const { accounts, isAcctLoading, Transactions } = useSelector(
-    (state) => state.accounts,
-  );
+  const {
+    accounts,
+    isAcctLoading,
+    Transactions,
+    filteredTransactions,
+    creditTrans,
+    debitTrans,
+    currentAccountInfo,
+  } = useSelector((state) => state.accounts);
   const [modalState, setModalState] = useState(false);
   const [BranchName, setBranchName] = useState("");
   const [BranchAddress, setBranchAddress] = useState("");
   const [BranchDescription, setBranchDescription] = useState("");
   const [BranchId, setBranchId] = useState();
-  const [creditTrans, setCreditTrans] = useState([]);
-  const [debitTrans, setDebitTrans] = useState([]);
   const [code, setCode] = useState("");
   const [accountId, setAccountId] = useState("");
   const [updateModal, setUpdateModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [unLinkedAccounts, setUnlinkedAccounts] = useState([]);
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
 
   useEffect(() => {
     let token = localStorage.getItem("token");
@@ -152,22 +161,47 @@ const Accounts = () => {
       token,
       branchId: account.branchId,
     };
+
     dispatch(GetAccountTransactions(Data));
+    dispatch(GetAccountInfo(Data));
   };
+
+  useEffect(() => {
+    let unlinkedAccounts = [];
+    let linkedAccounts = [];
+    if (accounts) {
+      unlinkedAccounts = accounts.filter((account) => account.accountId === "");
+      linkedAccounts = accounts.filter((account) => account.accountId != "");
+    }
+
+    setUnlinkedAccounts(unlinkedAccounts);
+    setLinkedAccounts(linkedAccounts);
+  }, [accounts]);
 
   useEffect(() => {
     if (Transactions) {
       localStorage.setItem("transactions", JSON.stringify(Transactions));
-      const CreditTrans = Transactions.filter(
+      const creditTrans = Transactions.filter(
         (transaction) => transaction.type == "credit",
       );
-      setCreditTrans(CreditTrans);
-      const DebitTrans = Transactions.filter(
+      const debitTrans = Transactions.filter(
         (transaction) => transaction.type == "debit",
       );
-      setDebitTrans(DebitTrans);
+      dispatch(setTypeTransactions({ debitTrans, creditTrans }));
     }
   }, [Transactions]);
+
+  useEffect(() => {
+    if (filteredTransactions) {
+      const creditTrans = filteredTransactions.filter(
+        (transaction) => transaction.type == "credit",
+      );
+      const debitTrans = filteredTransactions.filter(
+        (transaction) => transaction.type == "debit",
+      );
+      dispatch(setTypeTransactions({ debitTrans, creditTrans }));
+    }
+  }, [filteredTransactions]);
 
   const onUpdateHandler = () => {
     const formBody = {
@@ -199,16 +233,16 @@ const Accounts = () => {
       token,
       BranchId,
     };
-   
+
     dispatch(UnlinkAccount(Data));
-    if(!isAcctLoading){
+    if (!isAcctLoading) {
       const Data = {
         token,
         id: user.id,
       };
       dispatch(GetAccounts(Data));
-      setDeleteModal(false) 
-       }
+      setDeleteModal(false);
+    }
   };
 
   return (
@@ -229,9 +263,6 @@ const Accounts = () => {
             </Box>
 
             <Box mt="5" fontSize="20px" fontWeight="bold" w="100%">
-              <Text mb="5">
-                Linked Accounts - {accounts != null ? accounts.length : ""}
-              </Text>
               {accounts != null ? (
                 <>
                   {accounts.length == 0 ? (
@@ -266,58 +297,80 @@ const Accounts = () => {
                     </>
                   ) : (
                     <>
-                      <Flex justifyContent="space-between" flexWrap="wrap">
-                        {accounts.map((account) => {
-                          return (
-                            <Box key={account.branchId}>
-                              {account.accountId === "" ? (
-                                <>
+                      <Box justifyContent="space-between" flexWrap="wrap">
+                        <Text mb="5">
+                          UnLinked Accounts -{" "}
+                          {accounts != null ? unLinkedAccounts.length : ""}
+                        </Text>
+                        <>
+                          <Flex>
+                            {unLinkedAccounts.map((account) => {
+                              return (
+                                <Box key={account.branchId}>
                                   <Box
-                                    position="relative"
-                                    onClick={() => nav("/dashboard/accounts")}
-                                    bg="white"
-                                    borderRadius="7px"
-                                    textColor="black"
-                                    boxShadow="base"
-                                    width="250px"
-                                    h="20vh"
-                                    p="3"
+                                    mt="3"
+                                    fontSize="20px"
+                                    fontWeight="bold"
+                                    w="80%"
                                   >
-                                    <Text>{account.branchName}</Text>
                                     <Box
-                                      position="absolute"
-                                      bottom="0"
-                                      right="0"
-                                      p="2"
+                                      position="relative"
+                                      onClick={() => nav("/dashboard/accounts")}
+                                      bg="white"
+                                      borderRadius="7px"
+                                      textColor="black"
+                                      boxShadow="base"
+                                      width="250px"
+                                      h="20vh"
+                                      p="3"
                                     >
-                                      <Button
-                                        bg="#182CD1"
-                                        opacity="0.9"
-                                        color="white"
-                                        borderRadius="8px"
-                                        h="50px"
-                                        w="200px"
-                                        onClick={() => {
-                                          setBranchId(account.branchId);
-                                          monoConnect.open();
-                                        }}
+                                      <Text>{account.branchName}</Text>
+                                      <Box
+                                        position="absolute"
+                                        bottom="0"
+                                        right="0"
+                                        p="2"
                                       >
-                                        <Image
-                                          src="/images/mono.png"
-                                          w="inherit"
-                                          h="inherit"
-                                        />
-                                        <Divider
-                                          orientation="vertical"
-                                          colorScheme="#FFFFFF"
-                                        />
-                                        Connect To Mono
-                                      </Button>
+                                        <Button
+                                          bg="#182CD1"
+                                          opacity="0.9"
+                                          color="white"
+                                          borderRadius="8px"
+                                          h="50px"
+                                          w="200px"
+                                          onClick={() => {
+                                            setBranchId(account.branchId);
+                                            monoConnect.open();
+                                          }}
+                                        >
+                                          <Image
+                                            src="/images/mono.png"
+                                            w="inherit"
+                                            h="inherit"
+                                          />
+                                          <Divider
+                                            orientation="vertical"
+                                            colorScheme="#FFFFFF"
+                                          />
+                                          Connect To Mono
+                                        </Button>
+                                      </Box>
                                     </Box>
                                   </Box>
-                                </>
-                              ) : (
+                                </Box>
+                              );
+                            })}
+                          </Flex>
+
+                          <Text mb="5">
+                            Linked Accounts -{" "}
+                            {accounts != null ? linkedAccounts.length : ""}
+                          </Text>
+                          <Flex justifyContent="space-between">
+                            {linkedAccounts.map((account) => {
+                              return (
                                 <Box
+                                  key={account.branchId}
                                   bg="purple.800"
                                   borderRadius="7px"
                                   _hover={{
@@ -332,9 +385,10 @@ const Accounts = () => {
                                 >
                                   <Flex justifyContent="space-between">
                                     <Text
-                                      onClick={() =>
-                                        GetTransactionsHandler(account)
-                                      }
+                                      onClick={() => {
+                                        GetTransactionsHandler(account);
+                                        dispatch(setCurrentAccount(account));
+                                      }}
                                     >
                                       {account.branchName}
                                     </Text>
@@ -364,29 +418,30 @@ const Accounts = () => {
                                     </HStack>
                                   </Flex>
                                 </Box>
-                              )}
+                              );
+                            })}
+
+                            <Box>
+                              <Button
+                                bg="purple.800"
+                                onClick={() => setModalState(true)}
+                                borderRadius="9px"
+                                _hover={{
+                                  transform: "scale(1.05)",
+                                  cursor: "pointer",
+                                }}
+                                textColor="white"
+                                boxShadow="base"
+                                width="-moz-fit-content"
+                                h="8vh"
+                                p="3"
+                              >
+                                Add new Account
+                              </Button>
                             </Box>
-                          );
-                        })}
-                        <Box p="2">
-                          <Button
-                            bg="purple.800"
-                            onClick={() => setModalState(true)}
-                            borderRadius="9px"
-                            _hover={{
-                              transform: "scale(1.05)",
-                              cursor: "pointer",
-                            }}
-                            textColor="white"
-                            boxShadow="base"
-                            width="-moz-fit-content"
-                            h="8vh"
-                            p="3"
-                          >
-                            Add new Account
-                          </Button>
-                        </Box>
-                      </Flex>
+                          </Flex>
+                        </>
+                      </Box>
                     </>
                   )}
                 </>
@@ -535,7 +590,10 @@ const Accounts = () => {
                     Delete
                   </Button>
 
-                  <Button variant="ghost" onClick={(e) => setDeleteModal(false)}>
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => setDeleteModal(false)}
+                  >
                     Close
                   </Button>
                 </ModalFooter>

@@ -37,16 +37,12 @@ import TableComponent from "../components/TableComponent";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const {  onClose } = useDisclosure();
-  const { user, isLoading, token, monoKey} = useSelector(
+  const { onClose } = useDisclosure();
+  const { user, isLoading, token, monoKey } = useSelector(
     (state) => state.auth,
   );
-  const {
-    accounts,
-    Transactions,
-    AllTransactions,
-    RecentTransactions,
-  } = useSelector((state) => state.accounts);
+  const { accounts, Transactions, AllTransactions, RecentTransactions } =
+    useSelector((state) => state.accounts);
   const [modalState, setModalState] = useState(false);
   const [secretKey, setSecretKey] = useState("");
   const [privateKey, setPrivateKey] = useState("");
@@ -62,9 +58,17 @@ const Dashboard = () => {
     let transactions = localStorage.getItem("transactions");
     let allTransactions = localStorage.getItem("AllTransactions");
     let recentTransactions = localStorage.getItem("RecentTransactions");
-    
 
-    AccessRoute(token, user, expiryDate, monoKey, transactions, allTransactions, recentTransactions, dispatch);
+    AccessRoute(
+      token,
+      user,
+      expiryDate,
+      monoKey,
+      transactions,
+      allTransactions,
+      recentTransactions,
+      dispatch,
+    );
     const { id } = JSON.parse(user);
     const Data = {
       token,
@@ -90,12 +94,10 @@ const Dashboard = () => {
     }
   };
 
-
   useEffect(() => {
-    let start = 0;
-   
     if (AllTransactions != null) {
-      let end = AllTransactions.length
+      let end = AllTransactions.length;
+      let start = end / 2;
       localStorage.setItem("AllTransactions", JSON.stringify(AllTransactions));
       let timer = setInterval(() => {
         start += 1;
@@ -138,10 +140,9 @@ const Dashboard = () => {
           token,
         };
 
-        if(RecentTransactions == null && AllTransactions == null){
+        if (RecentTransactions == null && AllTransactions == null) {
           dispatch(GetAllTransactions(Data));
         }
-        
       }
     }
   }, [accounts]);
@@ -152,7 +153,7 @@ const Dashboard = () => {
         <Loading />
       ) : (
         <>
-          <Box bg="gray.200" p="5" mb="5">
+          <Box bg="gray.200" p="5">
             <Box mt="5">
               <Text fontFamily="cursive">
                 Hello {user ? user.userName : ""}, Welcome back 👋🏻
@@ -162,7 +163,7 @@ const Dashboard = () => {
               </Text>
             </Box>
 
-            <Box mt="5" fontSize="20px" fontWeight="bold" w="80%">
+            <Box mt="5" fontSize="20px" fontWeight="bold" w="100%">
               <Text mb="5">
                 Linked Accounts - {accounts != null ? accounts.length : ""}
               </Text>

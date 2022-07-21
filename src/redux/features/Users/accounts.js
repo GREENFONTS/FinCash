@@ -8,9 +8,19 @@ const initialState = {
   isAcctLoading: false,
   error: null,
   currentAccountId: null,
+  currentAccountInfo: null,
+  currentAccountIdentity: null,
+  currentAccount : null,
   Transactions: null,
   AllTransactions: null,
   RecentTransactions: null,
+  filteredTransactions: [],
+  time: null,
+  creditAmount: null,
+  debitAmount: null,
+  creditTrans: [],
+  debitTrans: []
+  
 };
 
 export const GetAccounts = createAsyncThunk(
@@ -122,9 +132,63 @@ export const GetAccountId = createAsyncThunk(
   },
 );
 
+
+export const GetAccountInfo = createAsyncThunk(
+  "user/GetAccountInfo",
+  async (Data) => {
+    console.log(Data);
+    try {
+      const res = await fetch(
+        `${url}/branch/AccountInfo/${Data.branchId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Data.token}`,
+            Accept: "application/json",
+          },
+        },
+      );
+      const result = await res.json();
+      if (res.status === 404) {
+        throw Error(result[404].errors[0].errorMessage);
+      }
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+  },
+);
+
+
+export const GetAccountIdentity = createAsyncThunk(
+  "user/GetAccountIdentity",
+  async (Data) => {
+    console.log(Data);
+    try {
+      const res = await fetch(
+        `${url}/branch/AccountIdentity/${Data.userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${Data.token}`,
+            Accept: "application/json",
+          },
+        },
+      );
+      const result = await res.json();
+      if (res.status === 404) {
+        throw Error(result[404].errors[0].errorMessage);
+      }
+      return result;
+    } catch (err) {
+      console.log(err);
+    }
+  },
+);
+
+
 export const GetAccountTransactions = createAsyncThunk(
   "user/GetAccountTransactions",
   async (Data) => {
+    console.log("enetered")
     try {
       const res = await fetch(`${url}/branch/Transactions/${Data.branchId}`, {
         headers: {
@@ -179,10 +243,30 @@ const AccountSlice = createSlice({
   reducers: {
     accountSetState: (state, action) => {
       state.Transactions = action.payload.transactions;
+      state.AllTransactions = action.payload.allTransactions
+      state.RecentTransactions = action.payload.recentTransactions
     },
     setRecentTransactions : (state, action) => {
       state.RecentTransactions = action.payload
-    }
+    },
+    setfilteredTransactions : (state, action) => {
+      state.filteredTransactions = action.payload
+    },
+    setTime : (state, action) => {
+      state.time = action.payload
+    },
+    setfilteredTransAmount : (state, action) => {
+      state.creditAmount = action.payload.totalCredit
+      state.debitAmount = action.payload.totalDebit
+    },
+    setTypeTransactions :  (state, action) => {
+      state.debitTrans = action.payload.debitTrans
+      state.creditTrans = action.payload.creditTrans
+    },
+    setCurrentAccount : (state, action) => {
+      state.currentAccount = action.payload
+    },
+    
   },
   extraReducers: (builder) => {
     builder.addCase(GetAccounts.pending, (state) => {
@@ -251,6 +335,34 @@ const AccountSlice = createSlice({
       state.error = action.error.message;
     });
 
+
+     //GetAccountInfo
+     builder.addCase(GetAccountInfo.pending, (state) => {
+      state.isAcctLoading = true;
+    });
+    builder.addCase(GetAccountInfo.fulfilled, (state, action) => {
+      state.currentAccountInfo = JSON.parse(action.payload);
+      state.isAcctLoading = false;
+    });
+    builder.addCase(GetAccountInfo.rejected, (state, action) => {
+      state.isAcctLoading = false;
+      state.error = action.error.message;
+    });
+
+
+    //GetAccountIdentity
+    builder.addCase(GetAccountIdentity.pending, (state) => {
+      state.isAcctLoading = true;
+    });
+    builder.addCase(GetAccountIdentity.fulfilled, (state, action) => {
+      state.currentAccountIdentity = JSON.parse(action.payload);
+      state.isAcctLoading = false;
+    });
+    builder.addCase(GetAccountIdentity.rejected, (state, action) => {
+      state.isAcctLoading = false;
+      state.error = action.error.message;
+    });
+
     //Get Account Transactions
     builder.addCase(GetAccountTransactions.pending, (state) => {
       state.isAcctLoading = true;
@@ -278,7 +390,8 @@ const AccountSlice = createSlice({
     });
   },
 });
-//code_qC20fL77sGrbwtA6HI2z
-export const { accountSetState, setRecentTransactions } = AccountSlice.actions;
+
+export const { accountSetState, setRecentTransactions, setfilteredTransactions, setTime, 
+  setfilteredTransAmount, setTypeTransactions, setCurrentAccount} = AccountSlice.actions;
 
 export default AccountSlice.reducer;
