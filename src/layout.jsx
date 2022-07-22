@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import NavComponent from "./components/nav";
 import LeftSidebarWrapper from "./components/LeftSideBar";
-import { Flex, Box, Spinner, Stack } from "@chakra-ui/react";
+import { Flex, Box} from "@chakra-ui/react";
 import RightSidebarWrapper from "./components/RigthSideBar";
 import Loading from "./components/Loader";
 
@@ -13,8 +13,8 @@ const Layout = ({ children }) => {
       <Loading />
       <Flex>
         
-          <>
-          {authenticated &&
+          {authenticated ?
+        <>
             <Box
               w="20%"
               h="100%"
@@ -24,11 +24,10 @@ const Layout = ({ children }) => {
             >
               <LeftSidebarWrapper />
             </Box>
-}
             <Box w={"65%"} ml={"20%"} mr={"17%"}>
               {children}
             </Box>
-            {authenticated &&
+         
             <Box
               w="17%"
               h="100%"
@@ -39,8 +38,8 @@ const Layout = ({ children }) => {
             >
               <RightSidebarWrapper />
             </Box>
-}
-          </>
+
+          </> : <Loading />}
         
       </Flex>
     </>

@@ -1,7 +1,7 @@
 import { Spinner, Box, Stack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { verifyToken } from "../redux/features/Users/auth";
 import { dispatch } from "../redux/store";
 
@@ -9,6 +9,7 @@ const Loading = () => {
   const { authenticated, isLoading } = useSelector((state) => state.auth);
   const nav = useNavigate();
   let token = localStorage.getItem("token");
+  const {pathname} = useLocation()
 
   useEffect(() => {
     if (
@@ -20,8 +21,16 @@ const Loading = () => {
       nav("/SignIn");
     } else {
       dispatch(verifyToken(token))
+
     }
-  }, [isLoading, authenticated, token]);
+  }, []);
+
+  useEffect(() => {
+
+    if(authenticated){
+      nav(pathname)
+    }
+  }, [authenticated])
 
   return (
     <>

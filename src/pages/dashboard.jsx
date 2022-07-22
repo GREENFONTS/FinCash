@@ -34,9 +34,9 @@ import { AddServiceKeys } from "../redux/features/Users/auth";
 import DashboardAlert from "../components/DashboardAlert";
 import { useNavigate } from "react-router-dom";
 import TableComponent from "../components/TableComponent";
+import { dispatch } from "../redux/store";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
   const { onClose } = useDisclosure();
   const { user, isLoading, token, monoKey } = useSelector(
     (state) => state.auth,
@@ -51,38 +51,21 @@ const Dashboard = () => {
   const [transCount, setTransCount] = useState(0);
 
   useEffect(() => {
-    let token = localStorage.getItem("token");
-    let expiryDate = localStorage.getItem("tokenExpiryDate");
-    let monoKey = localStorage.getItem("monoKey");
     let transactions = localStorage.getItem("transactions");
     let allTransactions = localStorage.getItem("AllTransactions");
     let recentTransactions = localStorage.getItem("RecentTransactions");
 
-    // AccessRoute(
-    //   token,
-    //   expiryDate,
-    //   monoKey,
-    //   transactions,
-    //   allTransactions,
-    //   recentTransactions,
-    //   dispatch,
-    // );
   }, []);
 
   useEffect(() => {
     if (user) {
       const { id } = user;
-      const Data = {
-        token,
-        id: id,
-      };
-      dispatch(GetAccounts(Data));
+      dispatch(GetAccounts(id));
     }
   }, [user]);
 
   const submitKeysHandler = (e) => {
     e.preventDefault();
-
     const formBody = {
       monoPrivateKey: privateKey,
       monoSecretKey: secretKey,
@@ -90,11 +73,8 @@ const Dashboard = () => {
       FlutterKey: "",
     };
 
-    dispatch(AddServiceKeys({ formBody, token }));
-    if (!monoKey) {
-      localStorage.setItem("monoKey", monoKey);
+    dispatch(AddServiceKeys(formBody));
       setModalState(false);
-    }
   };
 
   useEffect(() => {
@@ -166,7 +146,7 @@ const Dashboard = () => {
 
         {accounts != null ? (
           <>
-            {accounts.length == 0 ? (
+            {(accounts.length == 0 && monoKey === null) ? (
               <>
                 <Flex boxShadow={`0px 0px 3px #222`} p="5">
                   <Box w="50%" h="40vh">

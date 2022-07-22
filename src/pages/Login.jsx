@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Alert from "../components/Alert";
-import { setLoading, UserLogin } from "../redux/features/Users/auth";
+import auth, { setLoading, UserLogin } from "../redux/features/Users/auth";
 import {Box, Center, Image, Text, Icon, FormControl, Input, Button, VStack} from "@chakra-ui/react";
 import { FaUser } from "react-icons/fa";
 
@@ -27,7 +27,7 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    console.log(isLoading)
+    console.log(authenticated)
     if(authenticated && token && user){
       console.log(isLoading)
       localStorage.setItem('token', token)

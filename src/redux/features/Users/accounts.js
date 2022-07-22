@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import AccountService from "../../../Utils/axios/apis/accounts";
 import { ExtractTransactions, FormatTransactions } from "../../../Utils/Transactions";
 import { dispatch } from "../../store";
+import { createError } from "./auth";
 
 const url = "https://localhost:7266/api/user";
 const initialState = {
@@ -23,26 +25,16 @@ const initialState = {
   
 };
 
-export const GetAccounts = createAsyncThunk(
-  "user/GetAccounts",
-  async (Data) => {
-    try {
-      const res = await fetch(`${url}/Branch?userId=${Data.id}`, {
-        headers: {
-          Authorization: `Bearer ${Data.token}`,
-          Accept: "application/json",
-        },
-      });
-      const result = await res.json();
-      if (res.status === 404) {
-        throw Error(result[404].errors[0].errorMessage);
-      }
-      return result;
-    } catch (err) {
-      console.log(err);
-    }
-  },
-);
+
+export const GetAccounts = (data) => async () => {
+  try{
+    const res = await AccountService.GetAccounts(data)
+    dispatch(setAccounts(res.data))
+  }
+  catch(err){
+   dispatch(createError(err?.response?.data["404"].errors[0]))
+  }
+}
 
 export const AddAccount = createAsyncThunk("user/AddAccounts", async (Data) => {
   try {
@@ -240,6 +232,9 @@ const AccountSlice = createSlice({
   name: "Accounts",
   initialState,
   reducers: {
+    setAccounts : (state, action) => {
+      state.accounts = action.payload
+    }, 
     accountSetState: (state, action) => {
       state.Transactions = action.payload.transactions;
       state.AllTransactions = action.payload.allTransactions
@@ -268,19 +263,7 @@ const AccountSlice = createSlice({
     
   },
   extraReducers: (builder) => {
-    builder.addCase(GetAccounts.pending, (state) => {
-      state.isAcctLoading = true;
-    });
-    builder.addCase(GetAccounts.fulfilled, (state, action) => {
-      state.error = null;
-      state.isAcctLoading = false;
-      state.accounts = action.payload;
-    });
-    builder.addCase(GetAccounts.rejected, (state, action) => {
-      state.isAcctLoading = false;
-      state.error = action.error.message;
-    });
-
+   
     //Add Account
     builder.addCase(UpdateAccount.pending, (state) => {
       state.isAcctLoading = true;
@@ -390,7 +373,7 @@ const AccountSlice = createSlice({
   },
 });
 
-export const { accountSetState, setRecentTransactions, setfilteredTransactions, setTime, 
+export const { setAccounts, accountSetState, setRecentTransactions, setfilteredTransactions, setTime, 
   setfilteredTransAmount, setTypeTransactions, setCurrentAccount} = AccountSlice.actions;
 
 export default AccountSlice.reducer;

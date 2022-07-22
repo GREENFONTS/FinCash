@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 
-import api from "./axios";
+import api from "../axios";
 
 class User {
   constructor(private readonly request: AxiosInstance) {}
@@ -26,6 +26,15 @@ class User {
 
   async VerifyToken(token: string){
     return this.request.get(`/verifyToken?token=${token}`)
+  }
+
+  async AddServiceKeys(data: {
+    monoPrivateKey: string,
+      monoSecretKey: string,
+      UserId: string,
+      FlutterKey: string
+  }){
+    return this.request.post('/AddServiceKeys', data)
   }
 }
 
