@@ -8,6 +8,8 @@ import App from './App';
 import './index.css';
 import { ChakraProvider } from '@chakra-ui/react'
 import Layout from './layout';
+import Public from './public';
+import NavComponent from './components/nav';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root')
@@ -16,6 +18,8 @@ root.render(
   <ChakraProvider>
      <Provider store={store}>
     <BrowserRouter>
+    <NavComponent />
+    <Public />
     <Layout>
       <App/>
     </Layout>

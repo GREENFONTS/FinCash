@@ -5,16 +5,17 @@ import Dashboard from "./pages/dashboard";
 import Register from "./pages/register";
 import Accounts from "./pages/accounts";
 
-function App() {
+function Public() {
   return (
     <>
       <Routes>
-        
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/accounts" element={<Accounts />} />
+        <Route path="/" element={<Navigate replace to="/SignIn" />} />
+        <Route path="/SignIn" element={<LoginPage />} />
+        <Route path="/SignUp" element={<Register />} />
+
       </Routes>
     </>
   );
 }
 
-export default App;
+export default Public;

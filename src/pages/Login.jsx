@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Alert from "../components/Alert";
-import { UserLogin } from "../redux/features/Users/auth";
-import {Box, Center, Image, Text, Icon, FormControl, Input, Button, VStack, useColorModeValue} from "@chakra-ui/react";
+import { setLoading, UserLogin } from "../redux/features/Users/auth";
+import {Box, Center, Image, Text, Icon, FormControl, Input, Button, VStack} from "@chakra-ui/react";
 import { FaUser } from "react-icons/fa";
 
 const LoginPage = () => {
@@ -14,29 +14,32 @@ const LoginPage = () => {
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    if(authenticated){
-      localStorage.setItem('token', token)
-      localStorage.setItem('tokenExpiryDate', expiryDate)
-      localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('monoKey', monoKey)
-      nav("/dashboard")
-    }
-  })
   
   const submitHandler = (e) => {
-    console.log("enetered")
     e.preventDefault();
     const formBody = {
       email,
       password,
     };
 
-    dispatch(UserLogin(formBody))    
+    dispatch(UserLogin(formBody))  
+
   };
 
+  useEffect(() => {
+    console.log(isLoading)
+    if(authenticated && token && user){
+      console.log(isLoading)
+      localStorage.setItem('token', token)
+      localStorage.setItem('tokenExpiryDate', expiryDate)
+      localStorage.setItem('monoKey', monoKey)
+      nav("/dashboard")
+    }
+
+  }, [authenticated, token, user])
+
   return (
+
     <Box mt={{md: "5"}}>
       <Center>
       <Box mt={{md: "5"}} p="3" align="center" w={{base:"100%", lg: "80%"}} h={{md: "65vh",lg:"75vh"}} display={{md: "flex"}}>

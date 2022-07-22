@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { dispatch } from "../../store";
+import UserService from "../../../Utils/axios/apis";
 
-const url = "http://localhost:5266/api";
+const url = "http://localhost:5266/api"
+
 const initialState = {
   token: null,
   user: null,
@@ -12,51 +14,64 @@ const initialState = {
   monoKey: null,
 };
 
-export const UserLogin = createAsyncThunk(
-  "user/UserLogin",
-  async (formBody) => {
-    const res = await fetch(`${url}/login`, {
-      method: "POST",
-      headers: new Headers({ "content-type": "application/json" }),
-      body: JSON.stringify(formBody),
-    });
-    const result = await res.json();
-    if (res.status === 404) {
-      throw Error(result[404].errors[0].errorMessage);
-    }
-    dispatch(setAuthenticated(true));
-    return result;
-  },
-);
 
-export const verifyToken = createAsyncThunk(
-  "user/verifyToken",
-  async (token) => {
-    try {
-      const res = await fetch(`${url}/verifyToken?token=${token}`);
-      const result = await res.json()
-      dispatch(setAuthenticated(result));
-      return result;
-    } catch (err) {}
-  },
-);
 
-export const UserRegister = createAsyncThunk(
-  "user/UserRegister",
-  async (formBody) => {
-    const res = await fetch(`${url}/register`, {
-      method: "POST",
-      headers: new Headers({ "content-type": "application/json" }),
-      body: JSON.stringify(formBody),
-    });
-    const result = await res.json();
-    if (res.status === 404) {
-      throw Error(result[404].errors[0].errorMessage);
+// export const verifyToken = createAsyncThunk(
+//   "user/verifyToken",
+//   async (token) => {
+//     try {
+//       const res = await fetch(`${url}/verifyToken?token=${token}`);
+//       const result = await res.json()
+//       dispatch(setAuthenticated(result));
+//       return result;
+//     } catch (err) {
+//       console.log(err)
+//     }
+//   },
+// );
+
+export const UserLogin = async (data) => {
+  try{
+    const res = await UserService.Login(data)
+     dispatch(AddUserData(res.data))
+  }
+  catch(err){
+    console.log(err)
+   dispatch(createError(err?.response?.data["404"].errors[0]))
+  }
+}
+
+export const UserRegister = async (data) => {
+    try{
+      const res = await UserService.CreateUser(data)
+      console.log(res.data)
+       dispatch(AddUserData(res.data))
     }
-    dispatch(setAuthenticated(true));
-    return result;
-  },
-);
+    catch(err){
+      console.log(err)
+     dispatch(createError(err?.response?.data["404"].errors[0]))
+    }
+}
+
+export const verifyToken = async (token) => {
+  
+  try{
+    const res = await UserService.VerifyToken(token)
+    console.log(res.data)
+    if(res.data != null){
+      
+      dispatch(setAuthenticated(true));
+    }
+    else{
+      dispatch(setAuthenticated(false))
+    }
+   
+  }
+  catch(err){
+    console.log(err)
+   dispatch(createError(err?.response?.data["404"].errors[0]))
+  }
+}
 
 export const AddServiceKeys = createAsyncThunk(
   "user/AddServiceKeys",
@@ -83,9 +98,25 @@ const AuthSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
+    AddUserData : (state, action) => {
+      console.log(action.payload)
+      state.isLoading = false;
+      state.token = action.payload.token[0];
+      state.expiryDate = action.payload.token[1];
+      state.user = action.payload.user;
+      state.authenticated = true
+    },
+    createError : (state, action) => {
+      console.log(action.payload)
+      state.isLoading = false;
+      state.error = action.payload.errorMessage
+    },
     reset: () => initialState,
     setAuthenticated: (state, action) => {
+      console.log(action.payload)
       state.authenticated = action.payload;
+      // state.user = action.payload.user
+       state.isLoading = false
     },
     setLoading: (state, action) => {
       state.isLoading = action.payload;
@@ -98,45 +129,14 @@ const AuthSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(UserLogin.pending, (state) => {
-      state.isLoading = true;
-    });
-    builder.addCase(UserLogin.fulfilled, (state, action) => {
-      state.error = null;
-      state.isLoading = false;
-      state.token = action.payload.token[0];
-      state.expiryDate = action.payload.token[1];
-      state.user = action.payload.user;
-      state.monoKey = action.payload.monoKey;
-    });
-    builder.addCase(UserLogin.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.error.message;
-    });
-
-    //register
-    builder.addCase(UserRegister.pending, (state) => {
-      state.isLoading = true;
-    });
-    builder.addCase(UserRegister.fulfilled, (state, action) => {
-      state.error = null;
-      state.isLoading = false;
-      state.token = action.payload.token[0];
-      state.expiryDate = action.payload.token[1];
-      state.user = action.payload.user;
-    });
-    builder.addCase(UserRegister.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.error.message;
-    });
-
-    //verifyToken
-    builder.addCase(verifyToken.pending, (state) => {
-      state.isLoading = true;
-    });
-    builder.addCase(verifyToken.fulfilled, (state, action) => {
-      state.isLoading = false;
-    });
+   
+    // //verifyToken
+    // builder.addCase(verifyToken.pending, (state) => {
+    //   state.isLoading = true;
+    // });
+    // builder.addCase(verifyToken.fulfilled, (state, action) => {
+    //   state.isLoading = false;
+    // });
 
     //add service Keys
     builder.addCase(AddServiceKeys.pending, (state) => {
@@ -153,9 +153,9 @@ const AuthSlice = createSlice({
   },
 });
 
-export const { reset, setLoading, setAuthenticated, setState } =
+export const { reset, setLoading, setAuthenticated, setState, createError, AddUserData } =
   AuthSlice.actions;
 
 export default AuthSlice.reducer;
 
-//live_pk_rsvVbMIGeGx2FsAVP0c2
+

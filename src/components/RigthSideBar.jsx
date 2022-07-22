@@ -8,6 +8,16 @@ import {
   VStack,
   Select,
   Button,
+  Modal,
+  ModalOverlay,
+  ModalHeader,
+  ModalBody,
+  ModalContent,
+  ModalCloseButton,
+  ModalFooter,
+  useDisclosure,
+  FormControl,
+  Input,
 } from "@chakra-ui/react";
 import { useDispatch, useSelector } from "react-redux";
 import { DatedTransactions, TransAmount } from "../Utils/Transactions";
@@ -18,9 +28,11 @@ import {
   setTime,
 } from "../redux/features/Users/accounts";
 import { useLocation } from "react-router-dom";
+import DashboardAlert from "./DashboardAlert";
 
 const RightSidebarWrapper = () => {
   const dispatch = useDispatch();
+  const { onClose } = useDisclosure();
   const { pathname } = useLocation();
   const {
     Transactions,
@@ -31,40 +43,73 @@ const RightSidebarWrapper = () => {
     currentAccount,
     currentAccountInfo,
     currentAccountIdentity,
+    accounts,
   } = useSelector((state) => state.accounts);
-  const { user, token } = useSelector((state) => state.auth);
+  const { user, token, isLoading } = useSelector((state) => state.auth);
+  const [modalState, setModalState] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     if (Transactions) {
       let { totalCredit, totalDebit } = TransAmount(Transactions);
       dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
     }
-    const Data = {
-      token,
-      userId: user.id,
-    };
-    dispatch(GetAccountIdentity(Data));
+    if (user != null) {
+      const Data = {
+        token,
+        userId: user.id,
+      };
+      if(accounts != null){
+        if (accounts.length != 0) {
+          dispatch(GetAccountIdentity(Data));
+        }
+      }
+      
+    }
   }, []);
 
   useEffect(() => {
-    if (time != null) {
-      if (Transactions) {
-        let filteredTrans = DatedTransactions(Transactions, time);
+    if (accounts != null) {
+      if (accounts.length != 0) {
+        if (time != null) {
+          if (Transactions) {
+            let filteredTrans = DatedTransactions(Transactions, time);
 
-        dispatch(setfilteredTransactions(filteredTrans));
+            dispatch(setfilteredTransactions(filteredTrans));
+          }
+        }
       }
     }
   }, [time]);
 
-  console.log(pathname);
-
   useEffect(() => {
-    if (filteredTransactions) {
-      let { totalCredit, totalDebit } = TransAmount(filteredTransactions);
+    if(accounts != null) {
+    if (accounts.length != 0) {
+      if (filteredTransactions) {
+        let { totalCredit, totalDebit } = TransAmount(filteredTransactions);
 
-      dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
+        dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
+      }
     }
+  }
   }, [filteredTransactions]);
+
+  const UpdateUserHandler = (e) => {
+    e.preventDefault();
+    const formBody = {
+      userName,
+      email: user.email,
+      password: user.password,
+      Id: user.Id,
+      firstName,
+      lastName,
+      isEmailVerified: user.isEmailVerified,
+    };
+
+    console.log(formBody);
+  };
 
   return (
     <Container bg={"white"} h="100vh" p="0" m="0">
@@ -371,7 +416,11 @@ const RightSidebarWrapper = () => {
 
             <Divider orientation="horizontal" w="100%" />
             <VStack mt="4" spacing="20px">
-              <Button bg="purple.800" color="white">
+              <Button
+                bg="purple.800"
+                color="white"
+                onClick={() => setModalState(true)}
+              >
                 Update Profile
               </Button>
               <Button bg="purple.800" color="white">
@@ -382,6 +431,79 @@ const RightSidebarWrapper = () => {
               </Button>
             </VStack>
           </Box>
+
+          <Modal isOpen={modalState} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader textAlign="center">Update Profile</ModalHeader>
+              <ModalCloseButton onClick={() => setModalState(false)} />
+              <DashboardAlert />
+              <ModalBody>
+                <VStack mt="3" spacing="15px">
+                  <FormControl>
+                    <Input
+                      type="text"
+                      size="lg"
+                      className="form-control"
+                      id="firstName"
+                      onChange={(e) => setFirstName(e.target.value)}
+                      value={firstName}
+                      placeholder="Enter your FirstName"
+                    />
+                    <Input
+                      type="text"
+                      size="lg"
+                      className="form-control"
+                      id="lastName"
+                      onChange={(e) => setLastName(e.target.value)}
+                      value={lastName}
+                      placeholder="Enter your LastName"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      size="lg"
+                      className="form-control"
+                      id="userName"
+                      onChange={(e) => setUserName(e.target.value)}
+                      value={userName}
+                      placeholder="Enter your userName"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <Input
+                      disabled={true}
+                      type="text"
+                      size="lg"
+                      className="form-control"
+                      id="email"
+                      value={user ? user.email : ""}
+                      placeholder={user ? user.email : ""}
+                    />
+                  </FormControl>
+                </VStack>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={(e) => {
+                    UpdateUserHandler(e);
+                  }}
+                  isLoading={isLoading}
+                  loadingText="Updating..."
+                >
+                  Update
+                </Button>
+
+                <Button variant="ghost" onClick={(e) => setModalState(false)}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </>
       )}
     </Container>

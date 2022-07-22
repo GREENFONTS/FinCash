@@ -1,34 +1,48 @@
-import { Spinner, Flex } from "@chakra-ui/react";
+import { Spinner, Box, Stack } from "@chakra-ui/react";
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { verifyToken } from "../redux/features/Users/auth";
+import { dispatch } from "../redux/store";
 
 const Loading = () => {
-  const {  authenticated } = useSelector((state) => state.auth);
+  const { authenticated, isLoading } = useSelector((state) => state.auth);
   const nav = useNavigate();
+  let token = localStorage.getItem("token");
 
   useEffect(() => {
-    let token = localStorage.getItem("token");
-    if(token == null){
-      if (!authenticated) {
-        nav("/SignIn");
-      
+    if (
+      !isLoading &&
+      !authenticated &&
+      (token === "null" || token === null || token === undefined)
+    ) {
+      localStorage.clear();
+      nav("/SignIn");
+    } else {
+      dispatch(verifyToken(token))
     }
-    }
-      
-  }, []);
+  }, [isLoading, authenticated, token]);
 
   return (
-    <Flex justifyContent="center" position="fixed" bg="#000" opacity="0.1" left="0" top="70" w="100%" h="100vh" alignItems="center">
-      
-      <Spinner
-        thickness="6px"
-        speed="0.65s"
-        emptyColor="gray.200"
-        color="blue.800"
-        size="xl"
-      />
-    </Flex>
+    <>
+      {isLoading && (
+        <Box
+          position="fixed"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          zIndex="9999999"
+          bg="white"
+          w="100%"
+          h="100vh"
+          opacity="0.999"
+        >
+          <Stack justifyContent="center" h="inherit" alignItems="center">
+            <Spinner size="xl" color="primary-1" />
+          </Stack>
+        </Box>
+      )}
+    </>
   );
 };
 

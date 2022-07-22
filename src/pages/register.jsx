@@ -138,7 +138,7 @@ const Register = () => {
               )}
             </FormControl>
 
-            <Button bg="purple.600" w="100%" isLoading={isLoading} loadingText="logging in..." onClick={(e) => submitHandler(e)}>Login</Button>
+            <Button bg="purple.600" w="100%" isLoading={isLoading} loadingText="signin up..." onClick={(e) => submitHandler(e)}>SignUp</Button>
 
             </VStack>
           </form>

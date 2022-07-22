@@ -162,7 +162,6 @@ export const GetAccountInfo = createAsyncThunk(
 export const GetAccountIdentity = createAsyncThunk(
   "user/GetAccountIdentity",
   async (Data) => {
-    console.log(Data);
     try {
       const res = await fetch(
         `${url}/branch/AccountIdentity/${Data.userId}`,

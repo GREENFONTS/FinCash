@@ -8,7 +8,7 @@ import {
   accountSetState
 } from "../redux/features/Users/accounts";
 
-export const AccessRoute = (token, user, expiryDate, monoKey, transactions, allTransactions, recentTransactions,  dispatch) => {
+export const AccessRoute = (token, expiryDate, monoKey, transactions, allTransactions, recentTransactions,  dispatch) => {
   if ( transactions !== undefined) {
     transactions = JSON.parse( transactions);
   }
@@ -20,21 +20,24 @@ export const AccessRoute = (token, user, expiryDate, monoKey, transactions, allT
   }
 
   dispatch(setLoading(true));
-  if (token === null || user === null) {
+  
+  if (token === null) {
     dispatch(setLoading(false));
     dispatch(setAuthenticated(false));
-  } else {
+    localStorage.clear();
+  } 
+  else {
     var currentTime = new Date().getTime();
     var tokenTime = new Date(expiryDate).getTime();
     if (currentTime > tokenTime) {
       dispatch(setAuthenticated(false));
       dispatch(setLoading(false));
       localStorage.clear();
-    } else {
-      user = JSON.parse(user);
-      dispatch(setState({ token, user, expiryDate, monoKey }));
-      dispatch(accountSetState({ transactions, allTransactions, recentTransactions}))
-      dispatch(verifyToken(token));
-    }
-  }
+    } 
+  else {
+     //dispatch(setState({ token, user, expiryDate, monoKey }));
+    // dispatch(accountSetState({ transactions, allTransactions, recentTransactions}))
+    dispatch(verifyToken(token));
+     }
+}
 };
