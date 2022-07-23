@@ -6,10 +6,10 @@ import { verifyToken } from "../redux/features/Users/auth";
 import { dispatch } from "../redux/store";
 
 const Loading = () => {
-  const { authenticated, isLoading } = useSelector((state) => state.auth);
+  const { authenticated, isLoading, user } = useSelector((state) => state.auth);
   const nav = useNavigate();
   let token = localStorage.getItem("token");
-  const {pathname} = useLocation()
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (
@@ -20,17 +20,23 @@ const Loading = () => {
       localStorage.clear();
       nav("/SignIn");
     } else {
-      dispatch(verifyToken(token))
-
+      dispatch(verifyToken(token));
     }
   }, []);
 
   useEffect(() => {
-
-    if(authenticated){
-      nav(pathname)
+    if (authenticated) {
+      
+      if (pathname == "/SignIn" || pathname === "/SignUp") {
+        nav("/dashboard");
+      } else {
+        nav(pathname);
+      }
     }
-  }, [authenticated])
+    else if(!authenticated && user != null){
+      nav("/SignIn")
+    }
+  }, [authenticated, isLoading]);
 
   return (
     <>

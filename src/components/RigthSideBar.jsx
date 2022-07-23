@@ -29,6 +29,7 @@ import {
 } from "../redux/features/Users/accounts";
 import { useLocation } from "react-router-dom";
 import DashboardAlert from "./DashboardAlert";
+import { UpdateUser } from "../redux/features/Users/auth";
 
 const RightSidebarWrapper = () => {
   const dispatch = useDispatch();
@@ -45,7 +46,7 @@ const RightSidebarWrapper = () => {
     currentAccountIdentity,
     accounts,
   } = useSelector((state) => state.accounts);
-  const { user, token, isLoading } = useSelector((state) => state.auth);
+  const { user, isLoading } = useSelector((state) => state.auth);
   const [modalState, setModalState] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -57,16 +58,12 @@ const RightSidebarWrapper = () => {
       dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
     }
     if (user != null) {
-      const Data = {
-        token,
-        userId: user.id,
-      };
-      if(accounts != null){
+      const { id } = user;
+      if (accounts != null) {
         if (accounts.length != 0) {
-          dispatch(GetAccountIdentity(Data));
+          dispatch(GetAccountIdentity(id));
         }
       }
-      
     }
   }, []);
 
@@ -85,15 +82,15 @@ const RightSidebarWrapper = () => {
   }, [time]);
 
   useEffect(() => {
-    if(accounts != null) {
-    if (accounts.length != 0) {
-      if (filteredTransactions) {
-        let { totalCredit, totalDebit } = TransAmount(filteredTransactions);
+    if (accounts != null) {
+      if (accounts.length != 0) {
+        if (filteredTransactions) {
+          let { totalCredit, totalDebit } = TransAmount(filteredTransactions);
 
-        dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
+          dispatch(setfilteredTransAmount({ totalCredit, totalDebit }));
+        }
       }
     }
-  }
   }, [filteredTransactions]);
 
   const UpdateUserHandler = (e) => {
@@ -102,13 +99,14 @@ const RightSidebarWrapper = () => {
       userName,
       email: user.email,
       password: user.password,
-      Id: user.Id,
+      Id: user.id,
       firstName,
       lastName,
       isEmailVerified: user.isEmailVerified,
     };
 
-    console.log(formBody);
+    dispatch(UpdateUser(formBody))
+    setModalState(false)
   };
 
   return (
@@ -304,7 +302,7 @@ const RightSidebarWrapper = () => {
               <Text color="gray" fontSize="13px">
                 {currentAccountIdentity != null
                   ? currentAccountIdentity.fullName
-                  : ""}
+                  : user.firstName + " " + user.lastName}
               </Text>
             </Box>
 
@@ -354,7 +352,7 @@ const RightSidebarWrapper = () => {
                   <Text color="gray" fontSize="13px">
                     {currentAccountIdentity != null
                       ? currentAccountIdentity.email
-                      : ""}
+                      : user.email}
                   </Text>
                 </VStack>
               </HStack>
@@ -448,8 +446,12 @@ const RightSidebarWrapper = () => {
                       id="firstName"
                       onChange={(e) => setFirstName(e.target.value)}
                       value={firstName}
-                      placeholder="Enter your FirstName"
+                      placeholder={
+                        user ? user.firstName : "Enter your firstName"
+                      }
                     />
+                  </FormControl>
+                  <FormControl>
                     <Input
                       type="text"
                       size="lg"
@@ -457,7 +459,7 @@ const RightSidebarWrapper = () => {
                       id="lastName"
                       onChange={(e) => setLastName(e.target.value)}
                       value={lastName}
-                      placeholder="Enter your LastName"
+                      placeholder={user ? user.lastName : "Enter your lastName"}
                     />
                   </FormControl>
                   <FormControl>
@@ -468,7 +470,7 @@ const RightSidebarWrapper = () => {
                       id="userName"
                       onChange={(e) => setUserName(e.target.value)}
                       value={userName}
-                      placeholder="Enter your userName"
+                      placeholder={user ? user.userName : "Enter new UserName"}
                     />
                   </FormControl>
                   <FormControl>

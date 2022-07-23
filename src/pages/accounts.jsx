@@ -13,7 +13,7 @@ import {
   setCurrentAccount,
   GetAccountInfo,
 } from "../redux/features/Users/accounts";
-import { AccessRoute } from "../Utils/RouteAuth";
+import { ParseTransactions } from "../Utils/Transactions";
 import MonoConnect from "@mono.co/connect.js";
 
 import {
@@ -75,23 +75,14 @@ const Accounts = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [unLinkedAccounts, setUnlinkedAccounts] = useState([]);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
+  const [monoDisabled, setMonoDisabled] = useState(true);
 
   useEffect(() => {
-    let token = localStorage.getItem("token");
-    let transactions = localStorage.getItem("transactions");
+    let transactions = JSON.parse(localStorage.getItem("transactions"));
     let allTransactions = localStorage.getItem("AllTransactions");
     let recentTransactions = localStorage.getItem("RecentTransactions");
 
-    // AccessRoute(
-    //   token,
-    //   user,
-    //   expiryDate,
-    //   monoKey,
-    //   transactions,
-    //   allTransactions,
-    //   recentTransactions,
-    //   dispatch,
-    // );
+    ParseTransactions(transactions, allTransactions, recentTransactions);
     const { id } = user;
 
     dispatch(GetAccounts(id));
@@ -101,11 +92,11 @@ const Accounts = () => {
     if (monoKey != null) {
       const monoInstance = new MonoConnect({
         onClose: () => console.log("Widget closed"),
-        onLoad: () => console.log("Widget loaded successfully"),
+        onLoad: () => {console.log("Widget loaded successfully")
+      setMonoDisabled(false)},
         onSuccess: ({ code }) => {
           setCode(code);
         },
-
         key: monoKey,
       });
 
@@ -116,10 +107,11 @@ const Accounts = () => {
   }, [monoKey]);
 
   useEffect(() => {
+    const { id } = user;
     const Data = {
       code,
       BranchId,
-      token,
+      id
     };
     if (code != "") {
       dispatch(GetAccountId(Data));
@@ -138,25 +130,16 @@ const Accounts = () => {
       AccountId: "",
     };
 
-    dispatch(AddAccount({ formBody, token }));
-    if (!isAcctLoading) {
-      const Data = {
-        token,
-        id: user.id,
-      };
-      dispatch(GetAccounts(Data));
-      setModalState(false);
-    }
-  };
+    dispatch(AddAccount(formBody));
+    setModalState(false);
+  }
 
   const GetTransactionsHandler = (account) => {
-    const Data = {
-      token,
-      branchId: account.branchId,
-    };
+    const {branchId } = account;
+    console.log(branchId)
 
-    dispatch(GetAccountTransactions(Data));
-    dispatch(GetAccountInfo(Data));
+    dispatch(GetAccountTransactions(branchId));
+    dispatch(GetAccountInfo(branchId));
   };
 
   useEffect(() => {
@@ -205,35 +188,21 @@ const Accounts = () => {
       UserId: user.id,
       AccountId: accountId,
     };
-    const Data = {
-      formBody,
-      token,
-    };
-    dispatch(UpdateAccount(Data));
+    
+    dispatch(UpdateAccount(formBody));
 
     if (!isAcctLoading) {
-      const Data = {
-        token,
-        id: user.id,
-      };
-      dispatch(GetAccounts(Data));
+      const {id} = user
+      dispatch(GetAccounts(id));
       setModalState(false);
     }
   };
 
   const DeleteHandler = () => {
-    const Data = {
-      token,
-      BranchId,
-    };
-
-    dispatch(UnlinkAccount(Data));
+    dispatch(UnlinkAccount(BranchId));
     if (!isAcctLoading) {
-      const Data = {
-        token,
-        id: user.id,
-      };
-      dispatch(GetAccounts(Data));
+     const {id} = user
+      dispatch(GetAccounts(id));
       setDeleteModal(false);
     }
   };
@@ -324,6 +293,7 @@ const Accounts = () => {
                                       opacity="0.9"
                                       color="white"
                                       borderRadius="8px"
+                                      disabled={monoDisabled}
                                       h="50px"
                                       w="200px"
                                       onClick={() => {

@@ -27,9 +27,7 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    console.log(authenticated)
     if(authenticated && token && user){
-      console.log(isLoading)
       localStorage.setItem('token', token)
       localStorage.setItem('tokenExpiryDate', expiryDate)
       localStorage.setItem('monoKey', monoKey)

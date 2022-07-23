@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   Modal,
   ModalHeader,
@@ -24,15 +24,13 @@ import {
   Link,
   Button,
 } from "@chakra-ui/react";
-import Loading from "../components/Loader";
-import { AccessRoute } from "../Utils/RouteAuth";
+import { ParseTransactions } from "../Utils/Transactions";
 import {
   GetAccounts,
   GetAllTransactions,
 } from "../redux/features/Users/accounts";
 import { AddServiceKeys } from "../redux/features/Users/auth";
 import DashboardAlert from "../components/DashboardAlert";
-import { useNavigate } from "react-router-dom";
 import TableComponent from "../components/TableComponent";
 import { dispatch } from "../redux/store";
 
@@ -51,10 +49,11 @@ const Dashboard = () => {
   const [transCount, setTransCount] = useState(0);
 
   useEffect(() => {
-    let transactions = localStorage.getItem("transactions");
-    let allTransactions = localStorage.getItem("AllTransactions");
-    let recentTransactions = localStorage.getItem("RecentTransactions");
+    let transactions = JSON.parse(localStorage.getItem("transactions"));
+    let allTransactions = JSON.parse(localStorage.getItem("AllTransactions"));
+    let recentTransactions = JSON.parse(localStorage.getItem("RecentTransactions"));
 
+    ParseTransactions(transactions, allTransactions, recentTransactions);
   }, []);
 
   useEffect(() => {
@@ -74,18 +73,18 @@ const Dashboard = () => {
     };
 
     dispatch(AddServiceKeys(formBody));
-      setModalState(false);
+    setModalState(false);
   };
 
   useEffect(() => {
     if (AllTransactions != null) {
+      console.log(AllTransactions.length)
       let end = AllTransactions.length;
       let start = Math.round(end / 2);
-      localStorage.setItem("AllTransactions", JSON.stringify(AllTransactions));
       let timer = setInterval(() => {
         start += 1;
 
-        if (start === end) {
+        if (start > end) {
           clearInterval(timer);
         } else setTransCount(start);
       }, 1);
@@ -94,11 +93,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (RecentTransactions) {
-      localStorage.setItem(
-        "RecentTransactions",
-        JSON.stringify(RecentTransactions),
-      );
-
       const CreditTrans = RecentTransactions.filter(
         (transaction) => transaction.type == "credit",
       );
@@ -113,15 +107,14 @@ const Dashboard = () => {
   useEffect(() => {
     if (accounts) {
       if (accounts.length != 0) {
-        if (AllTransactions == null) {
-          if (user) {
-            const Data = {
-              userId: user.id,
-              token,
-            };
-            if (RecentTransactions == null && AllTransactions == null) {
-              dispatch(GetAllTransactions(Data));
-            }
+        if (user) {
+          const { id } = user;
+          if (
+            RecentTransactions === null ||
+            ([] && AllTransactions === null) ||
+            []
+          ) {
+            dispatch(GetAllTransactions(id));
           }
         }
       }
@@ -146,7 +139,7 @@ const Dashboard = () => {
 
         {accounts != null ? (
           <>
-            {(accounts.length == 0 && monoKey === null) ? (
+            {accounts.length == 0 && monoKey === null ? (
               <>
                 <Flex boxShadow={`0px 0px 3px #222`} p="5">
                   <Box w="50%" h="40vh">

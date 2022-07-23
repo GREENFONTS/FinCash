@@ -25,7 +25,6 @@ export const UserLogin = (data) => async () => {
 export const UserRegister = (data) => async () => {
   try {
     const res = await UserService.CreateUser(data);
-    console.log(res.data);
     dispatch(AddUserData(res.data));
   } catch (err) {
     console.log(err);
@@ -33,17 +32,36 @@ export const UserRegister = (data) => async () => {
   }
 };
 
-export const verifyToken = (token) => async () => {
-  dispatch(setLoading(true))
+export const UpdateUser = (data) => async () => {
   try {
+    const res = await UserService.UpdateUser(data);
+    console.log(res.data)
+    //dispatch(AddUserData(res.data));
+  } catch (err) {
+    console.log(err);
+    dispatch(createError(err?.response?.data["404"].errors[0]));
+  }
+};
 
-    const res = await UserService.VerifyToken(token)
-    if (res.data != null) {
-      dispatch(setAuthenticated({ state: true, data: res.data.res, mono: res.data.monoKey }));
+
+
+export const verifyToken = (token) => async () => {
+  dispatch(setLoading(true));
+  try {
+    const res = await UserService.VerifyToken(token);
+    if (res.data.user != null) {
+      dispatch(
+        setAuthenticated({
+          state: true,
+          data: res.data.user,
+          mono: res.data.monoKey,
+        }),
+      );
     } else {
-      dispatch(setAuthenticated(false));
+      dispatch(setLoading(false));
     }
   } catch (err) {
+    console.log(err);
     dispatch(createError(err?.response?.data["404"].errors[0]));
   }
 };
@@ -69,6 +87,9 @@ const AuthSlice = createSlice({
       state.user = action.payload.user;
       state.authenticated = true;
     },
+    setUser:(state, action) => {
+      state.user = action.payload
+    },
     createError: (state, action) => {
       state.isLoading = false;
       state.error = action.payload.errorMessage;
@@ -77,7 +98,7 @@ const AuthSlice = createSlice({
     setAuthenticated: (state, action) => {
       state.authenticated = action.payload.state;
       state.user = action.payload.data;
-      state.monoKey = action.payload.mono
+      state.monoKey = action.payload.mono;
       state.isLoading = false;
     },
     setLoading: (state, action) => {
@@ -88,10 +109,9 @@ const AuthSlice = createSlice({
       state.user = action.payload.user;
       state.expiryDate = action.payload.expiryDate;
       state.monoKey = action.payload.monoKey;
-      
     },
-    setMonoKey : (state, action) => {
-      state.monoKey = action.payload.monoPrivateKey
+    setMonoKey: (state, action) => {
+      state.monoKey = action.payload.monoPrivateKey;
     },
   },
 });
@@ -103,7 +123,8 @@ export const {
   setState,
   createError,
   AddUserData,
-  setMonoKey
+  setMonoKey,
+  setUser
 } = AuthSlice.actions;
 
 export default AuthSlice.reducer;
